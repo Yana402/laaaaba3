@@ -1,119 +1,86 @@
-#include<stdio.h>
-#include <malloc.h>
-#include <Windows.h>
-#include <io.h>
+#include <stdio.h>
+#include <windows.h>
 #pragma warning(disable: 4996)
-void enterIntValue(const char* instruction, int* value) {
-	do {
-		printf("%s", instruction);
-		if (scanf_s("%d", *&value)) {
-			return;
-		}
-		else {
-			printf("Incorrect input!\n");
-			rewind(stdin);
-		}
-	} while (1);
-}
-void fileInput(FILE*& file, const char* filename) {
-	int* values, valuesNum;
-	enterIntValue("How many values you want write down to file?\n", &valuesNum);
-	if (!(values = (int*)calloc(valuesNum, sizeof(int)))) {
-		printf("Allocation error!\n");
+void input(FILE*& stream, const char* filename) {
+	char buffer[100];
+	if (!(stream = fopen(filename, "w"))) {
+		printf("Error!\n");
 		return;
 	}
-	for (int i = 0; i < valuesNum; i++) {
-		printf("Value %d: ", i + 1);
-		enterIntValue("", &values[i]);
-	}
-	if (!(file = fopen(filename, "wb"))) {
-		puts("Error!\n");
+	printf("Enter smth in file: ");
+	gets_s(buffer);
+	fprintf(stream, "%s", buffer);
+	fclose(stream);
+}
+void output(FILE*& stream, const char* filename) {
+	char buffer[100];
+	if (!(stream = fopen(filename, "r"))) {
+		printf("Error!\n");
 		return;
 	}
-	rewind(file);
-	fwrite(values, sizeof(int), valuesNum, file);
-	free(values);
-	fclose(file);
+	fgets(buffer, 100, stream);
+	printf("File content: %s\n", buffer);
+	fclose(stream);
 }
-void fileOutput(FILE*& file, const char* filename) {
-	int value;
-	if (!(file = fopen(filename, "rb"))) {
-		printf("Error opening file!\n");
-		return;
-	}
-	rewind(file);
-	printf("File content: ");
-	while (!feof(file)) {
-		if (fread(&value, sizeof(int), 1, file))
-			printf("%3d", value);
-	}
-	putchar('\n');
-	fclose(file);
-}
-int count(FILE*& file, const char* filename) {
-	int a, b, counter = 0;
-	if (!(file = fopen(filename, "r"))) {
+int sum(FILE*& stream, const char* filename) {
+	char buffer[100]; int sum = 0, n = 0;
+	if (!(stream = fopen(filename, "r"))) {
 		printf("Error!\n");
 		return 0;
 	}
-	enterIntValue("Enter specified value: ", &a);
-	while (!feof(file)) {
-		fread(&b, sizeof(int), 1, file);
-		if (b < a)
-			counter++;
+	while (!feof(stream)) {
+		fscanf(stream, "%s", buffer);
+		int i = 0;
+		n = atoi(buffer);
+		sum += n;
 	}
-	return counter;
+	return sum;
 }
-long int filesize(FILE* fp)
-{
-	long int save_pos, size_of_file;
-	save_pos = ftell(fp);
-	fseek(fp, 0, SEEK_END);
-	size_of_file = ftell(fp);
-	fseek(fp, save_pos, SEEK_SET);
-	return(size_of_file);
+int strlen(char* str) {
+	int i;
+	for (i = 0; str[i]; i++);
+	return i;
 }
-void sort(FILE*& f, const char* filename) {
-	fpos_t n1, n2, n3;
-	int i1, i2;
-	if (!(f = fopen(filename, "r+b"))) {
-		printf("Error!\n");
-		return;
-	}
-	n3 = sizeof(int);
-	fseek(f, -n3, 2);                // переход на последнее число в файле
-	n3 = ftell(f);                   // позиция последнего числа
-	rewind(f);                       // возврат в начало файла
-	n1 = 0;
-	while (1)
-	{
-		if (n1 >= n3) break;         // n1 на последнем числе в файле
-		n2 = n3;                     // n2-позиция для движения вначало файла
-		while (n1 < n2)
-		{
-			fsetpos(f, &n2);         // позиция 1 считываемого числа
-			fread(&i2, sizeof(int), 1, f); // первое число для сравнения
-			n2 -= sizeof(int);
-			fsetpos(f, &n2);         // позиция 2 считываемого числа
-			fread(&i1, sizeof(int), 1, f); // второе число для сравнения
-
-			if (i1 < i2)               // сравнение и замена чисел в файле
-			{
-				fsetpos(f, &n2);     // позиция считываемого числа
-				fwrite(&i2, sizeof(int), 1, f); // исходное число
-				fwrite(&i1, sizeof(int), 1, f);
-			}
-		}
-		n1 += sizeof(int);
-	}
-	rewind(f);
-}
+//long int filesize(FILE* fp)
+//{
+//	long int save_pos, size_of_file;
+//	save_pos = ftell(fp);
+//	fseek(fp, 0, SEEK_END);
+//	size_of_file = ftell(fp);
+//	fseek(fp, save_pos, SEEK_SET);
+//	return(size_of_file);
+//}
+//void change(FILE*& file, const char* name) {
+//	char a[100], b[100];
+//	fpos_t pos1, pos2;
+//	if (!(file = fopen(name, "r+"))) {
+//		printf("Error!\n");
+//		return;
+//	}
+//	int len = 0;
+//	while (!feof(file)) {
+//		fscanf(file, "%s", a);
+//		len += strlen(a);
+//	}
+//	fseek(file, -strlen(a), SEEK_CUR);
+//	fgetpos(file, &pos1);
+//	rewind(file);
+//	while (ftell(file) != (filesize(file) - len)) {
+//		fscanf(file, "%s", b);
+//	}
+//	fseek(file, -strlen(b), SEEK_CUR);
+//	fgetpos(file, &pos2);
+//	rewind(file);
+//	fsetpos(file, &pos1);
+//	fprintf(file, "%s", b);
+//	fsetpos(file, &pos2);
+//	fprintf(file, "%s", a);
+//	fclose(file);
+//}
 int main() {
 	FILE* file;
-	fileInput(file, "a.bin");
-	fileOutput(file, "a.bin");
-	printf("Number of elements less than specifed: %d", count(file, "a.bin"));
-	sort(file, "a.bin");
-	putchar('\n');
-	fileOutput(file, "a.bin");
+	input(file, "a.txt");
+	printf("%d\n", sum(file, "a.txt"));
+	output(file, "a.txt");
+	return 0;
 }
